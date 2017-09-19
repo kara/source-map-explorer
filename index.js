@@ -53,14 +53,17 @@ function computeSpans(mapConsumer, generatedJs) {
     for (var column = 0; column < numCols; column++, numChars++) {
       var pos = mapConsumer.originalPositionFor({line:line, column:column});
       var source = pos.source;
+      var charSize = Buffer.byteLength(lineText[column], 'utf8');
 
       if (source !== lastSource) {
         lastSource = source;
-        spans.push({source: source, numChars: 1});
+        spans.push({source: source, numChars: charSize});
       } else {
         spans[spans.length - 1].numChars += 1;
       }
     }
+    // increment size on line change to account for line break size
+    if (line < lines.length) spans[spans.length - 1].numChars++;
   }
   return spans;
 }

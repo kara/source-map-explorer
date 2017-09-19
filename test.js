@@ -5,7 +5,8 @@ var sourceMapExplorer = require('./index'),
   mapKeys = sourceMapExplorer.mapKeys,
   commonPathPrefix = sourceMapExplorer.commonPathPrefix,
   expandGlob = sourceMapExplorer.expandGlob,
-  mergeNullSeparatedSpans = sourceMapExplorer.mergeNullSeparatedSpans;
+  mergeNullSeparatedSpans = sourceMapExplorer.mergeNullSeparatedSpans,
+  computeGeneratedFileSizes = sourceMapExplorer.computeGeneratedFileSizes;
 
 describe('source-map-explorer', function() {
   describe('commonPathPrefix', function() {
@@ -133,5 +134,39 @@ describe('source-map-explorer', function() {
         {source: 'F1', numChars: 80}
       ]);
     });
+  });
+  
+  describe('computeGeneratedFileSizes', function() {
+    var mockConsumer = function(source) {
+      return {
+        originalPositionFor: function(line, column) {
+          return {source: source, line: line, column: column};
+        }
+      };
+    };
+    
+    it('should count chars', function() {
+      var sizes = computeGeneratedFileSizes(mockConsumer('F1'),
+        'function test() { console.log("test"); }');
+      expect(sizes).to.deep.equal({F1: 40});
+    });
+    
+    it('should include line breaks in count', function() {
+      var sizes = computeGeneratedFileSizes(mockConsumer('F1'),
+        'function test() {\n  console.log("test");\n}');
+      expect(sizes).to.deep.equal({F1: 42});
+    });
+  
+    it('should account for special char size', function() {
+      // ɵ has a 2 byte size, 2 + 1 + 1 + 1 = 5
+      var sizes = computeGeneratedFileSizes(mockConsumer('F1'), 'ɵa()');
+      expect(sizes).to.deep.equal({F1: 5});
+    });
+    
+    it('should include null source in final count object', function() {
+      var sizes = computeGeneratedFileSizes(mockConsumer(null), 'console.log();');
+      expect(sizes).to.deep.equal({null: 14});
+    });
+    
   });
 });
