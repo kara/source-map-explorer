@@ -93,7 +93,6 @@ function computeGeneratedFileSizes(mapConsumer, generatedJs) {
   var counts = {};
   for (var i = 0; i < mergedSpans.length; i++) {
     var span = mergedSpans[i];
-    if (span.source === null) continue;
     counts[span.source] = (counts[span.source] || 0) + span.numChars;
   }
   return counts;
